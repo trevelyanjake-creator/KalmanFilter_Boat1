@@ -15,7 +15,6 @@ class Est:
                         [0, dt**4/4, 0, dt**3/2],
                         [dt**3/2, 0, dt**2, 0],
                         [0, dt**3/2, 0,  dt**2]])
-
         self.Q = sig_a**2 * mat
 
         self.current_GPS = np.zeros(2)
@@ -27,18 +26,12 @@ class Est:
                           [0, 0, 1, 0],
                           [0, 0, 0, 1]]
                           )
+        
         self.H = np.array([[1.0, 0.0, 0.0, 0.0],
                            [0.0, 1.0, 0.0, 0.0]])
-        
-        self.B = np.array([[dt, 0.0],
-                           [0.0, dt],
-                           [1.0, 0.0],
-                           [0.0, 1.0]])
-        
 
         self.Hv = np.array([[0.0, 0.0, 1.0, 0.0],
                             [0.0, 0.0, 0.0, 1.0]])
-
         self.Rv = 34.0 * np.eye(2)
         self.current_Vmeas = np.zeros(2)
 
