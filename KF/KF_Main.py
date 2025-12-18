@@ -62,16 +62,16 @@ while t < 80:
     boat.plot_boat(ax)
 
     if N % 10 == 0 and gps_on:
-        est.dynamic_predict(Dyn_pos, t)
-        v_meas = est.get_Vmeas(current, boat.Boat_VEng)
+        est.dynamic_predict()
+        v_meas = est.get_Vmeas(current, boat.Boat_VEng, Dyn_pos, t, dt)
         est.update_vel()
         est.getGPS(boat.BoatState, GPS_pos, t)
         est.update_est(est_pos, t)
     else:
         if N % 10 == 0 and not gps_on:
             GPS_pos.append([(real_pos[-1][0] - est.gps_lastError[0]), (real_pos[-1][1] - est.gps_lastError[1]), t])
-        est.dyn_only_update(Dyn_pos, t, est_pos)
-        v_meas = est.get_Vmeas(current, boat.Boat_VEng)
+        est.dyn_only_update(t, est_pos)
+        v_meas = est.get_Vmeas(current, boat.Boat_VEng, Dyn_pos, t, dt)
         est.update_vel()
     ax.plot(est.EstState[0], est.EstState[1], marker = 'o', markersize = 4, color = 'black')
 
