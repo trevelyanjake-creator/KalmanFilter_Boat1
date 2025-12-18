@@ -34,7 +34,7 @@ class Est:
         self.Hv = np.array([[0.0, 0.0, 1.0, 0.0],
                             [0.0, 0.0, 0.0, 1.0]])
 
-        self.Rv = 34.0 * np.eye(2)
+        self.Rv = 34 * np.eye(2)
         self.current_Vmeas = np.zeros(2)
 
 
