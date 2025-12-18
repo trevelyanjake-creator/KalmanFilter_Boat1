@@ -54,7 +54,7 @@ def on_key(event):
 fig.canvas.mpl_connect('key_press_event', on_key)
 
 
-while t < 25:
+while t < 120:
     ax.cla()
     ax.set_xlim(0, 750)
     ax.set_ylim(0, 750)
