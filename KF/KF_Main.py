@@ -46,15 +46,15 @@ current_change = np.random.randint(low = 200, high = 400)
 gps_on = True
 
 def on_key(event):
-    global gps_on  # if this is inside a function; otherwise use global
+    global gps_on
     if event.key == 'g':
         gps_on = not gps_on
-        print("GPS ON" if gps_on else "GPS OFF")
+        est.gps_lastError = np.array(real_pos[-1]) - np.array(GPS_pos[-1])
 
 fig.canvas.mpl_connect('key_press_event', on_key)
 
 
-while t < 120:
+while t < 25:
     ax.cla()
     ax.set_xlim(0, 750)
     ax.set_ylim(0, 750)
@@ -65,7 +65,7 @@ while t < 120:
         est.getGPS(boat.BoatState, GPS_pos, t)
         est.update_est(est_pos, t)
     elif N % 10 == 0 and not gps_on:
-        GPS_pos.append(real_pos[-1])
+        GPS_pos.append(real_pos[-1] - est.gps_lastError)
         est.dyn_only_update(current, boat.Boat_VEng, Dyn_pos, t, est_pos)
     else:
         est.dyn_only_update(current, boat.Boat_VEng, Dyn_pos, t, est_pos)
