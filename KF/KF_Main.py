@@ -49,26 +49,30 @@ def on_key(event):
     global gps_on
     if event.key == 'g':
         gps_on = not gps_on
-        est.gps_lastError = np.array(real_pos[-1]) - np.array(GPS_pos[-1])
+        est.gps_lastError = np.array(real_pos[-1][0:2]) - np.array(GPS_pos[-1][0:2])
 
 fig.canvas.mpl_connect('key_press_event', on_key)
 
 
-while t < 120:
+while t < 80:
     ax.cla()
     ax.set_xlim(0, 750)
     ax.set_ylim(0, 750)
     boat.move(dt, current, real_pos, t)
     boat.plot_boat(ax)
+
     if N % 10 == 0 and gps_on:
-        est.dynamic_predict(current, boat.Boat_VEng, Dyn_pos, t)
+        est.dynamic_predict(Dyn_pos, t)
+        v_meas = est.get_Vmeas(current, boat.Boat_VEng)
+        est.update_vel()
         est.getGPS(boat.BoatState, GPS_pos, t)
         est.update_est(est_pos, t)
-    elif N % 10 == 0 and not gps_on:
-        GPS_pos.append(real_pos[-1] - est.gps_lastError)
-        est.dyn_only_update(current, boat.Boat_VEng, Dyn_pos, t, est_pos)
     else:
-        est.dyn_only_update(current, boat.Boat_VEng, Dyn_pos, t, est_pos)
+        if N % 10 == 0 and not gps_on:
+            GPS_pos.append([(real_pos[-1][0] - est.gps_lastError[0]), (real_pos[-1][1] - est.gps_lastError[1]), t])
+        est.dyn_only_update(Dyn_pos, t, est_pos)
+        v_meas = est.get_Vmeas(current, boat.Boat_VEng)
+        est.update_vel()
     ax.plot(est.EstState[0], est.EstState[1], marker = 'o', markersize = 4, color = 'black')
 
     if N % current_change == 0:

@@ -6,6 +6,7 @@ class Est:
         self.drift_noise_GPS = np.zeros(2)
         self.drift_noise_Dyn_Eng = np.zeros(2)
         self.drift_noise_Dyn_Cur = np.zeros(2)
+        self.gps_lastError = np.zeros(2)
 
         self.R = 64 * np.eye(2)
 
@@ -28,6 +29,19 @@ class Est:
                           )
         self.H = np.array([[1.0, 0.0, 0.0, 0.0],
                            [0.0, 1.0, 0.0, 0.0]])
+        
+        self.B = np.array([[dt, 0.0],
+                           [0.0, dt],
+                           [1.0, 0.0],
+                           [0.0, 1.0]])
+        
+
+        self.Hv = np.array([[0.0, 0.0, 1.0, 0.0],
+                            [0.0, 0.0, 0.0, 1.0]])
+
+        self.Rv = 34.0 * np.eye(2)
+        self.current_Vmeas = np.zeros(2)
+
 
     def getGPS(self, Boat_State, pos, t):
         jitter_noise = np.random.normal(0, 8, size = 2)
@@ -39,51 +53,54 @@ class Est:
 
         pos.append([self.current_GPS[0], self.current_GPS[1], t])
 
-    def dynamic_predict(self, current, eng_V, pos, t):
-        # current_noise = np.random.normal(0, 3, size = 2)
-        # eng_noise = np.random.normal(0, 5, size = 2)
-        # self.drift_noise_Dyn_Eng += np.random.normal(0, 0.01, size = 2)
-        # self.drift_noise_Dyn_Cur += np.random.normal(0, 0.01, size = 2)
 
-        # curr_N = current + current_noise + self.drift_noise_Dyn_Cur
-        # eng_N = eng_V + eng_noise + self.drift_noise_Dyn_Eng
-
-        # self.EstState[2] = curr_N[0] + eng_N[0]
-        # self.EstState[3] = curr_N[1] + eng_N[1]
-
-        self.current_Dyn = self.A @ self.EstState  
+    def dynamic_predict(self, pos, t):
+        self.current_Dyn = self.A @ self.EstState
 
         pos.append([self.current_Dyn[0], self.current_Dyn[1], t])
 
         self.P = self.A @ self.P @ self.A.T + self.Q
+    
+
+    def update_vel(self):
+        y = self.current_Vmeas - self.Hv @ self.current_Dyn
+
+        S = self.Hv @ self.P @ self.Hv.T + self.Rv
+
+        K = self.P @ self.Hv.T @ np.linalg.inv(S)
+
+        self.EstState = self.current_Dyn + K @ y
+
+        self.P = (np.eye(4) - K @ self.Hv) @ self.P
+
+
+    def get_Vmeas(self, current, eng_V):
+        current_noise = np.random.normal(0, 3, size = 2)
+        eng_noise = np.random.normal(0, 5, size = 2)
+        self.drift_noise_Dyn_Eng += np.random.normal(0, 0.01, size = 2)
+        self.drift_noise_Dyn_Cur += np.random.normal(0, 0.01, size = 2)
+
+        curr_N = current + current_noise + self.drift_noise_Dyn_Cur
+        eng_N = eng_V + eng_noise + self.drift_noise_Dyn_Eng
+
+        self.current_Vmeas = curr_N + eng_N
 
     
     def update_est(self, pos, t):
-
-        y = self.current_GPS - self.H @ self.current_Dyn # suprise term
+        y = self.current_GPS - self.H @ self.EstState # suprise term
 
         S = self.H @ self.P @ self.H.T + self.R
 
         K = self.P @ self.H.T @ np.linalg.inv(S)
 
-        self.EstState = self.current_Dyn + K @ y
+        self.EstState = self.EstState + K @ y
 
         pos.append([float(self.EstState[0]), float(self.EstState[1]), t])
 
         self.P = (np.eye(4) - K @ self.H) @ self.P
     
-    def dyn_only_update(self, current, eng_V, pos, t, est_pos):
-        # current_noise = np.random.normal(0, 3, size = 2)
-        # eng_noise = np.random.normal(0, 5, size = 2)
-        # self.drift_noise_Dyn_Eng += np.random.normal(0, 0.01, size = 2)
-        # self.drift_noise_Dyn_Cur += np.random.normal(0, 0.01, size = 2)
 
-        # curr_N = current + current_noise + self.drift_noise_Dyn_Cur
-        # eng_N = eng_V + eng_noise + self.drift_noise_Dyn_Eng
-
-        # self.EstState[2] = curr_N[0] + eng_N[0]
-        # self.EstState[3] = curr_N[1] + eng_N[1]
-
+    def dyn_only_update(self, pos, t, est_pos):
         self.current_Dyn = self.A @ self.EstState 
 
         self.EstState = self.current_Dyn
