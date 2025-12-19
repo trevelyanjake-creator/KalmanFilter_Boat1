@@ -63,7 +63,7 @@ while t < 80:
 
     if N % 10 == 0 and gps_on:
         est.dynamic_predict()
-        v_meas = est.get_Vmeas(current, boat.Boat_VEng, Dyn_pos, t, dt)
+        est.get_Vmeas(current, boat.Boat_VEng, Dyn_pos, t, dt)
         est.update_vel()
         est.getGPS(boat.BoatState, GPS_pos, t)
         est.update_est(est_pos, t)
@@ -71,7 +71,7 @@ while t < 80:
         if N % 10 == 0 and not gps_on:
             GPS_pos.append([(real_pos[-1][0] - est.gps_lastError[0]), (real_pos[-1][1] - est.gps_lastError[1]), t])
         est.dyn_only_update(t, est_pos)
-        v_meas = est.get_Vmeas(current, boat.Boat_VEng, Dyn_pos, t, dt)
+        est.get_Vmeas(current, boat.Boat_VEng, Dyn_pos, t, dt)
         est.update_vel()
     ax.plot(est.EstState[0], est.EstState[1], marker = 'o', markersize = 4, color = 'black')
 
@@ -134,9 +134,9 @@ while i < GPS_arr.shape[0]:
     i += 1
 GPS_err_plot = np.linalg.norm(GPS_err, axis=1)
 
-plt.plot(t_arr, est_err_plot, label="KF")
-plt.plot(t_GPS_arr, GPS_err_plot, label="GPS")
-plt.plot(t_arr, Dyn_err_plot, label="Dynamic")
+plt.plot(t_arr, est_err_plot, label="KF estimate")
+plt.plot(t_GPS_arr, GPS_err_plot, label="GPS estimate")
+plt.plot(t_arr, Dyn_err_plot, label="Velocity input estimate")
 
 plt.xlabel("Time (ds)")
 plt.ylabel("Position error magnitude")

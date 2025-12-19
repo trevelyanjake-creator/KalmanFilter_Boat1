@@ -7,6 +7,7 @@ class Est:
         self.drift_noise_Dyn_Eng = np.zeros(2)
         self.drift_noise_Dyn_Cur = np.zeros(2)
         self.gps_lastError = np.zeros(2)
+        self.dyn_inp_guess = pos[0:2]
 
         self.R = 64 * np.eye(2)
 
@@ -34,7 +35,7 @@ class Est:
         self.Hv = np.array([[0.0, 0.0, 1.0, 0.0],
                             [0.0, 0.0, 0.0, 1.0]])
 
-        self.Rv = 34 * np.eye(2)
+        self.Rv = 164.0 * np.eye(2)
         self.current_Vmeas = np.zeros(2)
 
 
@@ -56,13 +57,13 @@ class Est:
     
 
     def update_vel(self):
-        y = self.current_Vmeas - self.Hv @ self.current_Dyn
+        y = self.current_Vmeas - self.Hv @ self.EstState
 
         S = self.Hv @ self.P @ self.Hv.T + self.Rv
 
         K = self.P @ self.Hv.T @ np.linalg.inv(S)
 
-        self.EstState = self.current_Dyn + K @ y
+        self.EstState = self.EstState + K @ y
 
         self.P = (np.eye(4) - K @ self.Hv) @ self.P
 
@@ -78,9 +79,9 @@ class Est:
 
         self.current_Vmeas = curr_N + eng_N
 
-        dynamic_inp_guess = self.EstState[0:2] + self.current_Vmeas * dt
+        self.dyn_inp_guess = self.dyn_inp_guess + self.current_Vmeas * dt
 
-        pos.append([dynamic_inp_guess[0], dynamic_inp_guess[1], t])
+        pos.append([self.dyn_inp_guess[0], self.dyn_inp_guess[1], t])
 
     
     def update_est(self, pos, t):
@@ -95,6 +96,8 @@ class Est:
         pos.append([float(self.EstState[0]), float(self.EstState[1]), t])
 
         self.P = (np.eye(4) - K @ self.H) @ self.P
+
+        self.dyn_inp_guess = self.EstState[0:2]
     
 
     def dyn_only_update(self, t, est_pos):
