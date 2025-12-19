@@ -35,7 +35,7 @@ class Est:
         self.Hv = np.array([[0.0, 0.0, 1.0, 0.0],
                             [0.0, 0.0, 0.0, 1.0]])
 
-        self.Rv = 164.0 * np.eye(2)
+        self.Rv = 89 * np.eye(2)
         self.current_Vmeas = np.zeros(2)
 
 
@@ -69,8 +69,8 @@ class Est:
 
 
     def get_Vmeas(self, current, eng_V, pos, t, dt):
-        current_noise = np.random.normal(0, 10, size = 2)
-        eng_noise = np.random.normal(0, 8, size = 2)
+        current_noise = np.random.normal(0, 8, size = 2)
+        eng_noise = np.random.normal(0, 5, size = 2)
         self.drift_noise_Dyn_Eng += np.random.normal(0, 0.1, size = 2)
         self.drift_noise_Dyn_Cur += np.random.normal(0, 0.1, size = 2)
 
